@@ -39,13 +39,35 @@ def zFactor(p, t, gSG):
 # %%
 f = (1 / (1.74 - 2 * math.log10(2 * rel_roughness))) ** 2
 
-# %%
+#%%
 depth = [x for x in range(0, L + 1, int(L / 2))]
-T = [Thf + ((Twf - Thf) / L) * D + 460 for D in depth]
-P = [phf,phf,phf]
-Z = [zFactor(phf,t,gSG) for d,t in zip(depth,T)]
-p_zt = [p/(z*t) for p,z,t in zip(P,Z,T)]
-I = [pzt / (0.001 *math.cos(math.radians(theta)) * (pzt**2) + (0.6666*f*(qsc**2))/(d**5)) for pzt in p_zt]
+T_hf_R = Thf + ((Twf - Thf) / L) * depth[0] + 460
+T_mf_R = Thf + ((Twf - Thf) / L) * depth[1] + 460
+T_wf_R = Thf + ((Twf - Thf) / L) * depth[-1] + 460
+Z_hf = zFactor(phf,T_hf_R,gSG)
+pzt_hf = phf/(Z_hf*T_hf_R)
+I_hf = pzt_hf / (0.001 *math.cos(math.radians(theta)) * (pzt_hf**2) + (0.6666*f*(qsc**2))/(d**5))
+
+# %%
+
+
+
+#
+# p_guess = phf+50
+# z_guess = zFactor(p_guess,T_mf_R,gSG)
+#
+# obj_fun = lambda Y: (Y - phf - (18.75*gSG*L/(I_hf+((Y/(z_guess*T_mf_R)) /
+#                                                    (0.001 *math.cos(math.radians(theta)) * ((Y/(z_guess*T_mf_R))**2) +
+#                                                     (0.6666*f*(qsc**2))/(d**5))))))
+# Y_soln = optimize.fsolve(obj_fun, 0)
+# fY_soln = obj_fun(Y_soln)
+# # print(Y_soln,fY_soln)
+#
+# pmf = Y_soln
+#
+
+
+
 
 #%%
 '''
