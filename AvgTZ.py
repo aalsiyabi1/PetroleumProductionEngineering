@@ -49,9 +49,10 @@ Z_hf = zFactor(phf, T_hf_R, gSG)
 pzt_hf = phf / (Z_hf * T_hf_R)
 I_hf = pzt_hf / (0.001 * math.cos(math.radians(theta)) * (pzt_hf ** 2) + (0.6666 * f * (qsc ** 2)) / (d ** 5))
 
+
 # %%
 
-def pCalc(piz_guess):
+def pCalc(piz_guess,t,I_prev,p_prev):
     p = piz_guess[0]
     I = piz_guess[1]
     z = piz_guess[2]
@@ -59,20 +60,38 @@ def pCalc(piz_guess):
     ppc = 677 + 15 * gSG - 37.5 * gSG ** 2
     tpc = 168 + 325 * gSG - 12.5 * gSG ** 2
 
-    tpr = T_mf_R / tpc
+    tpr = t / tpc
 
-    f0 = z - ((1.39 * (tpr - 0.92) ** 0.5 - 0.36 * tpr - 0.101) + ((1 - (1.39 * (tpr - 0.92) ** 0.5 - 0.36 * tpr - 0.101)) /
-                                                                  (math.exp((0.62 - 0.23 * tpr) * (p / ppc) + ((0.066 / (tpr - 0.86)) - 0.037) * ((p / ppc) ** 2) + ((0.32 * ((p / ppc) ** 6)) / (10 ** (9 * (tpr - 1))))))
-                                                                  + (0.132 - 0.32 * math.log10(tpr)) * ((p / ppc) ** (10 ** (0.3106 - 0.49 * tpr + 0.1824 * (tpr ** 2))))))
-    f1 = I - ((p / (z * T_mf_R)) / (0.001 * math.cos(math.radians(theta)) * ((p / (z * T_mf_R)) ** 2) + (0.6666 * f * (qsc ** 2)) / (d ** 5)))
-    f2 = p - phf - (18.75*gSG*L/(I_hf+I))
-    return np.array([f0,f1,f2])
+    f0 = z - ((1.39 * (tpr - 0.92) ** 0.5 - 0.36 * tpr - 0.101) + (
+                (1 - (1.39 * (tpr - 0.92) ** 0.5 - 0.36 * tpr - 0.101)) /
+                (math.exp((0.62 - 0.23 * tpr) * (p / ppc) + ((0.066 / (tpr - 0.86)) - 0.037) * ((p / ppc) ** 2) + (
+                            (0.32 * ((p / ppc) ** 6)) / (10 ** (9 * (tpr - 1))))))
+                + (0.132 - 0.32 * math.log10(tpr)) * (
+                            (p / ppc) ** (10 ** (0.3106 - 0.49 * tpr + 0.1824 * (tpr ** 2))))))
+    f1 = I - ((p / (z * t)) / (
+                0.001 * math.cos(math.radians(theta)) * ((p / (z * t)) ** 2) + (0.6666 * f * (qsc ** 2)) / (
+                    d ** 5)))
+    f2 = p - p_prev - (18.75 * gSG * L / (I_prev + I))
+    return np.array([f0, f1, f2])
 
 
 piz_guess0 = np.array([phf, I_hf, Z_hf])
-piz = optimize.fsolve(pCalc,piz_guess0)
+piz = optimize.fsolve(pCalc, piz_guess0,(T_mf_R,I_hf,phf))
 pmf = piz[0]
-print(piz,pCalc(piz))
-print(zFactor(pmf,T_mf_R,gSG))
+I_mf = piz[1]
+Z_mf = piz[2]
+print(piz, pCalc(piz,T_mf_R,I_mf,phf))
+
+piz_guess1 = np.array([pmf, I_mf, Z_mf])
+piz1 = optimize.fsolve(pCalc, piz_guess1,(T_wf_R,I_mf,pmf))
+pwf = piz1[0]
+I_wf = piz1[1]
+Z_wf = piz1[2]
+print(piz1, pCalc(piz1,T_wf_R,I_wf,pmf))
+
 
 # %%
+
+
+
+
